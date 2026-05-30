@@ -14,16 +14,23 @@ faith questions, content generation, and image creation.
 
 ## Architecture
 
-User Message
-│
-▼
-safety.py          — Three-tier classifier (BLOCKED / SENSITIVE / SAFE)
-│
-├── BLOCKED    → Return refusal immediately
-├── Image?     → image_gen.py → Pollinations.AI
-└── Text       → embeddings.py (RAG) → chat.py → Groq LLM
-→ verifier.py
-→ Return response
+```mermaid
+flowchart TD
+    A[User Message] --> B[safety.py\nThree-tier classifier]
+    
+    B -->|BLOCKED| C[Return refusal immediately\nNo LLM call made]
+    B -->|Image request| D[image_gen.py\nPrompt safety + style rewrite]
+    B -->|SAFE or SENSITIVE| E[embeddings.py\nRAG — retrieve top 5 verses]
+    
+    D --> F[Pollinations.AI\nImage generation API]
+    F --> G[Return image URL]
+    
+    E --> H[chat.py\nBuild context window\nSystem prompt + verses + history]
+    H --> I[Groq LLM\nllama-3.3-70b-versatile]
+    I --> J[verifier.py\nExtract and verify all\nscripture references]
+    J -->|All verified| K[Return clean response]
+    J -->|Flagged references| L[Append warning note\nReturn response]
+```
 
 ## Setup
 

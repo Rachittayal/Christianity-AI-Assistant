@@ -8,7 +8,6 @@ import verifier
 import image_gen
 
 load_dotenv()
-
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 MAX_MEMORY_TURNS = 10
@@ -47,7 +46,6 @@ TONE:
 - Intellectually honest — acknowledge when questions have no simple answers
 - Never preachy or condescending
 - Concise — give complete answers without unnecessary length"""
-
 
 SENSITIVE_ADDITION = """
 

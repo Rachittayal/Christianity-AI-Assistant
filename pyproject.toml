@@ -1,0 +1,18 @@
+[project]
+name = "ai-assistant"
+version = "0.1.0"
+description = "Christianity-focused AI assistant with RAG, verse verification, and image generation"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "chromadb",
+    "python-dotenv",
+    "requests",
+    "python-multipart",
+    "sentence-transformers",
+    "pydantic",
+    "groq>=1.2.0",
+    "httpx",
+]

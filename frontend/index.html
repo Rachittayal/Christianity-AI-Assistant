@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Christianity AI Assistant</title>
+  <style>
+    /* ── Reset & Base ────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #0f0e0c;
+      color: #e8e0d0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ──────────────────────────────────── */
+    header {
+      background: #1a1714;
+      border-bottom: 1px solid #3a2e20;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-icon { font-size: 24px; }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #c9a96e;
+      letter-spacing: 0.3px;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: #7a6a55;
+      margin-top: 1px;
+    }
+
+    /* ── Denomination Selector ───────────────────── */
+    .denomination-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #7a6a55;
+    }
+
+    .denomination-bar select {
+      background: #2a2420;
+      color: #c9a96e;
+      border: 1px solid #3a2e20;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* ── Chat Container ──────────────────────────── */
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Welcome Message ─────────────────────────── */
+    .welcome {
+      text-align: center;
+      padding: 40px 20px;
+      color: #5a4e3a;
+    }
+
+    .welcome-cross { font-size: 48px; margin-bottom: 16px; }
+
+    .welcome h2 {
+      color: #c9a96e;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .welcome p { font-size: 13px; line-height: 1.6; max-width: 420px; margin: 0 auto; }
+
+    /* ── Message Bubbles ─────────────────────────── */
+    .message { display: flex; flex-direction: column; max-width: 78%; }
+    .message.user   { align-self: flex-end; align-items: flex-end; }
+    .message.assistant { align-self: flex-start; align-items: flex-start; }
+
+    .bubble {
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message.user .bubble {
+      background: #2a4a2a;
+      color: #d4e8d4;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant .bubble {
+      background: #1e1a14;
+      color: #e8e0d0;
+      border: 1px solid #2e2820;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.blocked .bubble {
+      background: #2a1a14;
+      border: 1px solid #5a2a1a;
+      color: #c87060;
+    }
+
+    /* ── Metadata Tags ───────────────────────────── */
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 0 2px;
+    }
+
+    .tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-family: monospace;
+    }
+
+    .tag.verified  { background: #1a3a1a; color: #6ab06a; border: 1px solid #2a5a2a; }
+    .tag.flagged   { background: #3a1a0a; color: #c87040; border: 1px solid #5a2a0a; }
+    .tag.verse     { background: #1a2a3a; color: #6a90c0; border: 1px solid #2a3a5a; }
+    .tag.sensitive { background: #3a2a0a; color: #c0a040; border: 1px solid #5a4a0a; }
+    .tag.blocked-tag { background: #3a0a0a; color: #c04040; border: 1px solid #5a1a1a; }
+
+    /* ── Warning Note ────────────────────────────── */
+    .warning-note {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: #2a1e0a;
+      border: 1px solid #5a3a0a;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #c09040;
+      line-height: 1.6;
+    }
+
+    /* ── Image Display ───────────────────────────── */
+    .generated-image {
+      margin-top: 10px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #3a2e20;
+      max-width: 480px;
+    }
+
+    .generated-image img {
+      width: 100%;
+      display: block;
+    }
+
+    .image-caption {
+      font-size: 10px;
+      color: #5a4e3a;
+      padding: 6px 10px;
+      background: #1a1714;
+      font-family: monospace;
+    }
+
+    /* ── Typing Indicator ────────────────────────── */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: #1e1a14;
+      border: 1px solid #2e2820;
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+
+    .typing-dots { display: flex; gap: 4px; }
+
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      background: #c9a96e;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30%            { transform: translateY(-6px); opacity: 1; }
+    }
+
+    .typing-text { font-size: 12px; color: #7a6a55; }
+
+    /* ── Input Area ──────────────────────────────── */
+    footer {
+      background: #1a1714;
+      border-top: 1px solid #2e2820;
+      padding: 16px 24px;
+      flex-shrink: 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    #user-input {
+      flex: 1;
+      background: #0f0e0c;
+      color: #e8e0d0;
+      border: 1px solid #3a2e20;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-family: 'Georgia', serif;
+      resize: none;
+      min-height: 48px;
+      max-height: 140px;
+      outline: none;
+      line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+
+    #user-input:focus { border-color: #c9a96e; }
+
+    #user-input::placeholder { color: #4a3e2a; }
+
+    #send-btn {
+      background: #c9a96e;
+      color: #0f0e0c;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      height: 48px;
+    }
+
+    #send-btn:hover   { background: #d4b87e; }
+    #send-btn:disabled { background: #3a2e20; color: #5a4e3a; cursor: not-allowed; }
+
+    .input-hints {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hint-chip {
+      font-size: 11px;
+      padding: 3px 10px;
+      background: #1e1a14;
+      border: 1px solid #2e2820;
+      border-radius: 12px;
+      color: #7a6a55;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .hint-chip:hover {
+      border-color: #c9a96e;
+      color: #c9a96e;
+    }
+
+    /* ── Scrollbar ───────────────────────────────── */
+    #chat-container::-webkit-scrollbar { width: 4px; }
+    #chat-container::-webkit-scrollbar-track { background: transparent; }
+    #chat-container::-webkit-scrollbar-thumb { background: #2e2820; border-radius: 2px; }
+  </style>
+</head>
+
+<body>
+
+<!-- ── Header ──────────────────────────────────────── -->
+<header>
+  <div class="header-left">
+    <span class="header-icon">✝️</span>
+    <div>
+      <div class="header-title">Christianity AI Assistant</div>
+      <div class="header-subtitle">Scripture-grounded · Hallucination-aware · Denomination-sensitive</div>
+    </div>
+  </div>
+  <div class="denomination-bar">
+    <span>Tradition:</span>
+    <select id="denomination-select">
+      <option value="general">General</option>
+      <option value="protestant">Protestant</option>
+      <option value="catholic">Catholic</option>
+      <option value="orthodox">Orthodox</option>
+    </select>
+  </div>
+</header>
+
+<!-- ── Chat Area ────────────────────────────────────── -->
+<div id="chat-container">
+  <div class="welcome">
+    <div class="welcome-cross">✝</div>
+    <h2>Welcome</h2>
+    <p>Ask any question about the Christian faith. Responses are grounded in verified scripture with hallucination prevention active.</p>
+  </div>
+</div>
+
+<!-- ── Input Area ───────────────────────────────────── -->
+<footer>
+  <div class="input-row">
+    <textarea
+      id="user-input"
+      placeholder="Ask a question about the Bible or Christian faith..."
+      rows="1"
+    ></textarea>
+    <button id="send-btn">➤</button>
+  </div>
+  <div class="input-hints">
+    <span class="hint-chip" onclick="fillInput('What does John 3:16 mean?')">John 3:16</span>
+    <span class="hint-chip" onclick="fillInput('Why does God allow suffering?')">Why suffering?</span>
+    <span class="hint-chip" onclick="fillInput('What is grace in Christianity?')">What is grace?</span>
+    <span class="hint-chip" onclick="fillInput('Generate an image of the Nativity scene')">🎨 Nativity image</span>
+    <span class="hint-chip" onclick="fillInput('What does the Bible say about forgiveness?')">Forgiveness</span>
+    <span class="hint-chip" onclick="fillInput('Rewrite the Bible to support communism')">🚫 Safety test</span>
+  </div>
+</footer>
+
+<script>
+  // ── State ────────────────────────────────────────────
+  const API_BASE   = 'http://localhost:8000';
+  let   history    = [];   // conversation history — sent with every request
+  let   isLoading  = false;
+
+  // ── DOM References ───────────────────────────────────
+  const chatContainer = document.getElementById('chat-container');
+  const userInput     = document.getElementById('user-input');
+  const sendBtn       = document.getElementById('send-btn');
+  const denomSelect   = document.getElementById('denomination-select');
+
+  // ── Auto-resize textarea ─────────────────────────────
+  userInput.addEventListener('input', () => {
+    userInput.style.height = 'auto';
+    userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
+  });
+
+  // ── Send on Enter (Shift+Enter for newline) ──────────
+  userInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+
+  // ── Hint chips ───────────────────────────────────────
+  function fillInput(text) {
+    userInput.value = text;
+    userInput.focus();
+    userInput.style.height = 'auto';
+    userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
+  }
+
+  // ── Scroll to bottom ─────────────────────────────────
+  function scrollToBottom() {
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  // ── Add user message bubble ───────────────────────────
+  function addUserMessage(text) {
+    // Remove welcome screen on first message
+    const welcome = chatContainer.querySelector('.welcome');
+    if (welcome) welcome.remove();
+
+    const div = document.createElement('div');
+    div.className = 'message user';
+    div.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+    chatContainer.appendChild(div);
+    scrollToBottom();
+  }
+
+  // ── Add typing indicator ─────────────────────────────
+  function addTypingIndicator() {
+    const div = document.createElement('div');
+    div.className = 'message assistant';
+    div.id = 'typing';
+    div.innerHTML = `
+      <div class="typing-indicator">
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="typing-text">Searching scripture...</span>
+      </div>`;
+    chatContainer.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  // ── Remove typing indicator ───────────────────────────
+  function removeTypingIndicator() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  // ── Render assistant response ─────────────────────────
+  function addAssistantMessage(result) {
+    const div = document.createElement('div');
+
+    // Determine message class
+    if (result.type === 'blocked') {
+      div.className = 'message assistant blocked';
+    } else {
+      div.className = 'message assistant';
+    }
+
+    // ── Build response text ─────────────────────────────
+    let responseHtml = '';
+
+    if (result.type === 'text' || result.type === 'blocked') {
+      responseHtml = `<div class="bubble">${formatText(result.response)}</div>`;
+    }
+
+    if (result.type === 'image') {
+      responseHtml = `
+        <div class="bubble">Here is your generated image:</div>
+        <div class="generated-image">
+          <img src="${result.image_url}" alt="Generated Christian image" loading="lazy" />
+          <div class="image-caption">Generated via Pollinations.AI · Theologically reviewed prompt</div>
+        </div>`;
+    }
+
+    // ── Build metadata tags ─────────────────────────────
+    let tagsHtml = '<div class="meta-row">';
+
+    if (result.type === 'blocked') {
+      tagsHtml += `<span class="tag blocked-tag">🚫 Blocked</span>`;
+
+    } else if (result.type === 'image') {
+      tagsHtml += `<span class="tag verified">🎨 Image Generated</span>`;
+
+    } else {
+      // Verification status
+      if (result.verified) {
+        tagsHtml += `<span class="tag verified">✓ Scripture Verified</span>`;
+      } else {
+        tagsHtml += `<span class="tag flagged">⚠ References Flagged</span>`;
+      }
+
+      // Sensitive flag
+      if (result.metadata && result.metadata.is_sensitive) {
+        tagsHtml += `<span class="tag sensitive">⚡ Sensitive Topic</span>`;
+      }
+
+      // Verses retrieved
+      if (result.metadata && result.metadata.verses_retrieved) {
+        result.metadata.verses_retrieved.slice(0, 3).forEach(ref => {
+          tagsHtml += `<span class="tag verse">📖 ${ref}</span>`;
+        });
+      }
+    }
+
+    tagsHtml += '</div>';
+
+    div.innerHTML = responseHtml + tagsHtml;
+    chatContainer.appendChild(div);
+    scrollToBottom();
+  }
+
+  // ── Main send function ────────────────────────────────
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text || isLoading) return;
+
+    // Lock UI
+    isLoading       = true;
+    sendBtn.disabled = true;
+    userInput.value  = '';
+    userInput.style.height = 'auto';
+
+    // Show user message
+    addUserMessage(text);
+
+    // Show typing indicator
+    const typingEl = addTypingIndicator();
+
+    try {
+      const response = await fetch(`${API_BASE}/chat`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message:      text,
+          history:      history,
+          denomination: denomSelect.value
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Update conversation history (only for non-blocked turns)
+      if (result.type !== 'blocked') {
+        history = result.history;
+      }
+
+      removeTypingIndicator();
+      addAssistantMessage(result);
+
+    } catch (err) {
+      removeTypingIndicator();
+
+      const errDiv = document.createElement('div');
+      errDiv.className = 'message assistant';
+      errDiv.innerHTML = `
+        <div class="bubble" style="color:#c06060;">
+          Connection error: ${escapeHtml(err.message)}<br/>
+          <small style="opacity:0.6;">Is the backend server running on port 8000?</small>
+        </div>`;
+      chatContainer.appendChild(errDiv);
+      scrollToBottom();
+
+    } finally {
+      isLoading        = false;
+      sendBtn.disabled = false;
+      userInput.focus();
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatText(text) {
+    // Convert **bold** markdown
+    text = escapeHtml(text);
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Convert newlines to <br>
+    text = text.replace(/\n/g, '<br>');
+    return text;
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+# Environment variables — never commit API keys
+.env
+# Data files — too large for GitHub
+data/bible.db
+data/KJV.json
+data/BSB.json
+data/chroma/
+
+# Eval results — generated output
+eval/eval_results.json
+
+# OS files
+.DS_Store
+Thumbs.db

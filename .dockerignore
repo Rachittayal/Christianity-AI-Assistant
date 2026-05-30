@@ -1,0 +1,21 @@
+# Virtual environment — Docker creates its own
+.venv/
+
+# API keys — set via HF Spaces Secrets
+.env
+
+# Python cache — not needed
+__pycache__/
+*.pyc
+*.pyo
+
+# Git files — not needed in image
+.git/
+.gitignore
+
+# Eval files — not needed in production
+eval/
+
+# OS files
+.DS_Store
+Thumbs.db
